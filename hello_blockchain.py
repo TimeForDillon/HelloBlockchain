@@ -10,7 +10,7 @@ import random
 # this is a class for the crypto degen that has a wallet addr, ada amount, name, and seed phrase
 class CryptoDegen:
     
-    apy = 0.035  # 3.5% APY
+    apy = 0.05  # 5% APY
     apy_percent = apy * 100
     
     def __init__(self, name, ada_amount):
