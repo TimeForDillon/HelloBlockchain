@@ -10,7 +10,7 @@ import random
 # this is a class for the crypto degen that has a wallet addr, ada amount, name, and seed phrase
 class CryptoDegen:
     
-    apy = 0.05  # 5% APY
+    apy = 0.032  # 3.2% APY
     apy_percent = apy * 100
     
     def __init__(self, name, ada_amount):
@@ -32,7 +32,7 @@ class CryptoDegen:
         # download as txt file and store in same folder as python script
         with open('english.txt', 'r') as f:
             words = f.readlines()
-
+            f.close()
         # Select 24 random words from the list
         random_words = []
         while len(random_words) < 24:
@@ -41,6 +41,11 @@ class CryptoDegen:
                 random_words.append(word)
                 
         return random_words
+    
+    # this will save the created seed pharses in a new txt.file
+    def save_seedphrases(self):
+        with open("seeds.txt", "a") as f:
+            f.write("\n".join(self.seed_phrase) + "\n")
     
     def get_seed_phrase(self):
         return self.seed_phrase
@@ -73,15 +78,46 @@ class CryptoDegen:
         
     def __str__(self):
         print("Crypto Degen Name: " + self.name + ", Ada Amount: " + self.ada_amount)
+        
+    def check_seed_phrase(self, word, index):
+        entered_word = word.strip().lower()
+        seed_word = self.seed_phrase[index].strip().lower()
+    
+        print("Entered word:", entered_word)
+        print("Seed phrase word:", seed_word)
+    
+        if seed_word == entered_word:
+            return True
+        else:
+            return False
+        
+    def send_ada(self, other, amount):
+        if (amount > self.ada_amount):
+            print("insufficient funds...")
+        else:
+            #check seed phrase
+            index = random.randint(0, 23)
+            input_word = input("Please enter word #" + str(index) + " in your seed phrase to confirm transaction: ")
+            if self.check_seed_phrase(input_word, index):
+                #if seed is good send ada
+                self.ada_amount -= amount;
+                other.ada_amount += amount;
+            else:
+                #if seed is bad output
+                print("Seed phrase did not match...")
+        
 
 # takes user input for a name and returns it back to the main function
 def take_username_as_input():
     while True:
-        name = input("Please enter your name for wallet1: ")
-        if name.isalpha():
-            return name
-        else:
-            print("Invalid input. Please enter a valid name with letters only.")
+        try:
+            name = input("Please enter your name for your wallet: ")
+            if name.isalpha():
+                return name
+            else:
+                raise ValueError("Invalid name. Please enter a valid name with letters only.")
+        except ValueError as e:
+            print(e)
         
 # takes user input for wallet balance and returns it back to the main function
 def take_wallet_balance_as_input():
@@ -90,49 +126,56 @@ def take_wallet_balance_as_input():
             wallet = float(input("Please enter the amount of ADA you have: "))
             return wallet
         except ValueError:
-            print("Invalid input. Please enter a valid number.")  
+            print("Invalid input. Please enter a valid number.")
 
 def main():
-    # your program logic goes here
     print("Hello, Blockchain!")
     
-    # take name1 input:
-    # take wallet1 input:
-    # create a crypto degen object with the name1 and ada_amount1:
+    try:
+        name1 = take_username_as_input()
+        ada_amount1 = take_wallet_balance_as_input()
+        Wallet1 = CryptoDegen(name1, ada_amount1)
+
+        name2 = take_username_as_input()
+        ada_amount2 = take_wallet_balance_as_input()
+        Wallet2 = CryptoDegen(name2, ada_amount2)
         
-    Charles = CryptoDegen(take_username_as_input(), take_wallet_balance_as_input())
+        print(Wallet1.get_name() + " has " + str(Wallet1.get_ada_amount()) + " ADA.")
+        print(Wallet1.get_name() + "'s seed phrase is: " + str(Wallet1.get_seed_phrase()))
+        Wallet1.save_seedphrases()
+        print(Wallet2.get_name() + " has " + str(Wallet2.get_ada_amount()) + " ADA.")
+        print(Wallet2.get_name() + "'s seed phrase is: "+ str(Wallet2.get_seed_phrase()))
+        Wallet2.save_seedphrases()
 
-    # take name2 input:
-    # take wallet2 input:
-    # create a crypto degen object with the name1 and ada_amount1:
-        
-    TimeForDillon = CryptoDegen(take_username_as_input(), take_wallet_balance_as_input())
-
-    # print out names and wallets
-    print(Charles.get_name() + " has " + str(Charles.get_ada_amount()) + " ADA.")
-    print(Charles.get_name() + "'s seed phrase is: " + str(Charles.get_seed_phrase()))
-    print(TimeForDillon.get_name() + " has " + str(TimeForDillon.get_ada_amount()) + " ADA.")
-    print(TimeForDillon.get_name() + "'s seed phrase is: "+ str(TimeForDillon.get_seed_phrase()))
-
-    # print out names and wallets after stake rewards have been applied
+        ans = input("Do you want to send ada? (y/n)")
+        if ans == "y":
+            try:
+                amount_to_send = float(input("How much ada would you like to send? "))
+                Wallet1.send_ada(Wallet2, amount_to_send)
+            except ValueError:
+                print("Invalid input. Please enter a valid number.")
     
-    formatted_string1 = f"{Charles.get_name()} has {Charles.get_annual_stake_rewards():.2f} ADA after staking for 1 year at {Charles.get_apy_percentage():.2f}% APY."
-    print(formatted_string1)
-    formatted_string2 = f"{TimeForDillon.get_name()} has {TimeForDillon.get_annual_stake_rewards():.2f} ADA after staking for 1 year at {TimeForDillon.get_apy_percentage():.2f}% APY."
-    print(formatted_string2)
+        print(Wallet1.get_name() + " has " + str(Wallet1.get_ada_amount()) + " ADA.")
+        print(Wallet2.get_name() + " has " + str(Wallet2.get_ada_amount()) + " ADA.")
+        
+        formatted_string1 = f"{Wallet1.get_name()} has {Wallet1.get_annual_stake_rewards():.2f} ADA after staking for 1 year at {Wallet1.get_apy_percentage():.2f}% APY."
+        print(formatted_string1)
+        formatted_string2 = f"{Wallet2.get_name()} has {Wallet2.get_annual_stake_rewards():.2f} ADA after staking for 1 year at {Wallet2.get_apy_percentage():.2f}% APY."
+        print(formatted_string2)
 
-    # we are outputting the wallet with more ada in it.d
-    if Charles.get_ada_amount() > TimeForDillon.get_ada_amount():
-        print(Charles.get_name() + " has more ADA than " + TimeForDillon.get_name())
-    elif Charles.get_ada_amount() == TimeForDillon.get_ada_amount():
-        print(Charles.get_name() + " and " + TimeForDillon.get_name() + " have the same amount of ADA: " + str(Charles.get_ada_amount()) + "!")
-    else: 
-        print(Charles.get_name() + " has more ADA than " + TimeForDillon.get_name())
+        if Wallet1.get_ada_amount() > Wallet2.get_ada_amount():
+            print(Wallet1.get_name() + " has more ADA than " + Wallet2.get_name())
+        elif Wallet1.get_ada_amount() == Wallet2.get_ada_amount():
+            print(Wallet1.get_name() + " and " + Wallet2.get_name() + " have the same amount of ADA: " + str(Wallet1.get_ada_amount()) + "!")
+        else: 
+            print(Wallet2.get_name() + " has more ADA than " + Wallet1.get_name())
+    except KeyboardInterrupt:
+        print("\nProgram terminated by user.")
+    except Exception as e:
+        print("An error occurred:", e)
 
-# call the main function to execute your program
 if __name__ == '__main__':
     main()
-
 
 
     
